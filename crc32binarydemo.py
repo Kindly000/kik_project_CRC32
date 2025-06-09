@@ -47,11 +47,17 @@ def CRC_visual(data, key):
         rem_bin = toBin(rem).zfill(n)
 
         dividend_bin = toBin(dividend).zfill(total_bits)
+
+        start_idx = total_bits - dividend.bit_length() # gdzie zaczynaja sie znaczace bity ( bez zer na początku )
+        portion_start = start_idx
+        portion_end = portion_start + n  # n bitów, które bierzemy do XOR
+
         colored_dividend = (
-            f"{dividend_bin[0:max_shift-current_shft]}"
-            + f"\033[32m{dividend_bin[(max_shift-current_shft):len(dividend_bin)-current_shft]}\033[0m"
-            + dividend_bin[len(dividend_bin) - current_shft :]
+            dividend_bin[:portion_start]
+            + f"\033[32m{dividend_bin[portion_start:portion_end]}\033[0m"
+            + dividend_bin[portion_end:]
         )
+
 
         print(f"Divident bits : {colored_dividend}")
         print(f"  XORing:       {portion_bin}")
@@ -59,10 +65,8 @@ def CRC_visual(data, key):
         print(f"        =       {rem_bin}")
         print(f"Posuwam się dalej w prawo (shift = {current_shft})\n")
 
-        # print(toBin(rem))
         """Wstawiamy reszte z dzielenia na miejscu pierwszych n bitów w ciagu informacyjnym ( umitacja dzielenia w słupku )"""
         dividend = (dividend & ((1 << current_shft) - 1)) | (rem << current_shft)
-        # print(toBin(dividend))
 
     """Ostateczne wyniki"""
     remainder = dividend
@@ -70,7 +74,7 @@ def CRC_visual(data, key):
 
     print("🔚 Koniec dzielenia.")
     print(f"🔸 Reszta (CRC):     {toBin(remainder).zfill(n - 1)}")
-    print(f"🔸 Codeword (dane + CRC): {toBin(codeword)}\n")
+    print(f"🔸 Codeword (dane + CRC): {toBin(codeword).zfill(total_bits)}\n")
 
     return toBin(codeword)
 
@@ -100,13 +104,12 @@ def check_crc(codeword, key):
 if __name__ == "__main__":
     data = "111010001100101011100110111010010001110100011110010100011010"
     generator_hex = "0x04C11DB7"
+    generator_bin = bin(int(generator_hex, 16))[2:].zfill(32)
+    generator_bin = "1" + generator_bin  # upewniamy się, że jest 33-bitowy
 
     """Do testow"""
     # data = "1000101"
     # generator_bin = "101"
-
-    generator_bin = bin(int(generator_hex, 16))[2:].zfill(32)
-    generator_bin = "1" + generator_bin  # upewniamy się, że jest 33-bitowy
 
     print("-" * 10 + " CRC wizualizacja z 802.3/802.11 polynomem " + "-" * 10)
     print(f"Generator G(x): {generator_bin}")
