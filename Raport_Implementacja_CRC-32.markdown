@@ -109,7 +109,7 @@ Algorytm CRC-32 według standardu IEEE 802.3 (zdefiniowany w IEEE 802.3 - 2022 )
 4. Dołączeniu 32-bitowej reszty jako sumy kontrolnej.
 5. Weryfikacji po stronie odbiorcy przez powtórzenie dzielenia.
 
-![alt text](CRC-32-802-3.png)
+![802-3-CRC32](https://i.sstatic.net/aVTur.png)
 
 ---
 
