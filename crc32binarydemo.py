@@ -191,7 +191,7 @@ if __name__ == "__main__":
     - Oblicza codeword (data + CRC).
     - Sprawdza poprawność przesyłu przy użyciu kodu CRC.
     """
-    data = "111010001100101011100110111010010001110100011110010100011010"
+    data = "00111010001100101011100110111010010001110100011110010100011010"
     generator_hex = "0x04C11DB7"
     generator_bin = bin(int(generator_hex, 16))[2:].zfill(32)
     generator_bin = "1" + generator_bin  # upewniamy się, że jest 33-bitowy
@@ -204,5 +204,7 @@ if __name__ == "__main__":
     print(f"Generator G(x): {generator_bin}")
     print("-" * 60)
 
-    codeword = CRC_visual(data, generator_bin)
-    check_crc(codeword, generator_bin)
+    check = data + "11001010000100100111111101101111"
+
+    # codeword = CRC_visual(data, generator_bin)
+    check_crc(check, generator_bin)

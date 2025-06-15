@@ -109,7 +109,7 @@ Algorytm CRC-32 według standardu IEEE 802.3 (zdefiniowany w IEEE 802.3 - 2022 )
 4. Dołączeniu 32-bitowej reszty jako sumy kontrolnej.
 5. Weryfikacji po stronie odbiorcy przez powtórzenie dzielenia.
 
-![alt text](image.png)
+![alt text](CRC-32-802-3.png)
 
 ---
 
@@ -117,9 +117,194 @@ Algorytm CRC-32 według standardu IEEE 802.3 (zdefiniowany w IEEE 802.3 - 2022 )
 
 ### 4.1. Dokumentacja kodu
 
-Poniżej przedstawiono kod źródłowy programu w Pythonie, który wizualizuje proces obliczania CRC-32 oraz weryfikacji sumy kontrolnej.
+#### Spis treści
+- [Wprowadzenie](#wprowadzenie)
+- [Funkcje](#funkcje)
+  - [toBin(num)](#tobin-num)
+  - [toDec(bin_str)](#todec-bin_str)
+  - [CRC_visual(data, key)](#crc_visual-data-key)
+  - [check_crc(codeword, key)](#check_crc-codeword-key)
 
-``` python
+#### Wprowadzenie
+Dokumentacja opisuje implementację algorytmu CRC-32 w Pythonie, zgodnego ze standardem IEEE 802.3. Kod zawiera funkcje do obliczania sumy kontrolnej CRC, wizualizacji procesu dzielenia binarnego oraz weryfikacji poprawności danych. Każda funkcja jest opisana pod kątem jej przeznaczenia, parametrów, zwracanych wartości oraz kluczowych fragmentów kodu.
+
+#### Funkcje
+
+##### toBin(num){id="tobin-num"}
+Konwertuje liczbę całkowitą na ciąg binarny, usuwając prefiks `0b`.
+
+###### Parametry
+- `num` (int): Liczba całkowita do konwersji.
+
+###### Zwraca
+- `str`: Ciąg binarny reprezentujący liczbę. Dla zera zwraca `"0"`.
+
+###### Przykład
+
+```python
+>>> toBin(10)
+'1010'
+>>> toBin(0)
+'0'
+```
+
+###### Kluczowe linie kodu
+
+```python
+return bin(num)[2:] if num != 0 else "0"
+```
+
+- **`bin(num)[2:]`**: Konwertuje liczbę na ciąg binarny i usuwa prefiks `0b`.
+- **Warunek `if num != 0 else "0"`**: Zapewnia, że dla zera zwracany jest ciąg `"0"`.
+
+---
+
+##### toDec(bin_str){id="todec-bin_str"}
+Konwertuje ciąg binarny na liczbę całkowitą (dziesiętną).
+
+###### Parametry
+- `bin_str` (str): Ciąg binarny (np. `"1011"`).
+
+###### Zwraca
+- `int`: Wartość dziesiętna odpowiadająca ciągowi binarnemu. Dla pustego ciągu zwraca `0`.
+
+###### Przykład
+
+```python
+>>> toDec("1011")
+11
+>>> toDec("")
+0
+```
+
+###### Kluczowe linie kodu
+
+```python
+return int(bin_str, 2) if bin_str else 0
+```
+
+- **`int(bin_str, 2)`**: Konwertuje ciąg binarny na liczbę dziesiętną.
+- **Warunek `if bin_str else 0`**: Obsługuje pusty ciąg, zwracając `0`.
+
+---
+
+##### CRC_visual(data, key){id="crc_visual-data-key"}
+Wizualizuje proces obliczania sumy kontrolnej CRC-32 poprzez dzielenie binarne w ciele GF(2). Dane są dzielone przez wielomian generujący, a wynik (słowo kodowe) zawiera dane wejściowe i dołączoną sumę kontrolną.
+
+###### Parametry
+- `data` (str): Ciąg binarny reprezentujący dane wejściowe (np. `"1011001"`).
+- `key` (str): Ciąg binarny reprezentujący wielomian generujący (np. `"1001"` dla prostego przypadku lub 33-bitowy dla CRC-32).
+
+###### Zwraca
+- `str`: Słowo kodowe (dane + CRC) jako ciąg binarny.
+
+###### Wyjątki
+- `ValueError`: Jeśli klucz jest pusty.
+
+###### Przykład
+
+```python
+>>> CRC_visual("1000101", "101")
+# Wyświetla kroki dzielenia binarnego i zwraca np.:
+'100010101'
+```
+
+###### Kluczowe linie kodu
+
+```python
+dividend = code << (n - 1)
+```
+
+- Przesuwa dane w lewo o \( n-1 \) bitów, dopełniając je zerami, aby zarezerwować miejsce na sumę kontrolną.
+
+```python
+portion = dividend >> current_shft
+```
+
+- Pobiera \( n \) najbardziej znaczących bitów z dywidendy do operacji XOR.
+
+```python
+rem = portion ^ gen
+```
+
+- Wykonuje operację XOR między fragmentem danych a wielomianem generującym, realizując dzielenie w ciele GF(2).
+
+```python
+dividend = (dividend & ((1 << current_shft) - 1)) | (rem << current_shft)
+```
+
+- Symuluje dzielenie w słupku:
+  - `(1 << current_shft) - 1`: Tworzy maskę bitową z jedynkami do pozycji `current_shft`.
+  - `dividend & mask`: Usuwa \( n \)-bitowy fragment z przodu dywidendy.
+  - `rem << current_shft`: Wstawia wynik XOR na miejsce usuniętego fragmentu.
+
+```python
+toBin(dividend).zfill(total_bits)
+```
+
+- Zapewnia stałą długość ciągu binarnego w wizualizacji, dodając zera wiodące.
+
+###### Wizualizacja
+Funkcja wyświetla każdy krok dzielenia binarnego, podświetlając aktualnie przetwarzane bity (za pomocą kodów ANSI) oraz pokazując operacje XOR i przesunięcia.
+
+---
+
+##### check_crc(codeword, key){id="check_crc-codeword-key"}
+Sprawdza poprawność słowa kodowego (dane + CRC) przez ponowne dzielenie binarne przez wielomian generujący.
+
+###### Parametry
+- `codeword` (str): Słowo kodowe (dane + CRC) jako ciąg binarny.
+- `key` (str): Wielomian generujący jako ciąg binarny.
+
+###### Zwraca
+- Brak. Funkcja wyświetla:
+  - Resztę z dzielenia (jeśli `0`, brak błędów).
+  - Komunikat o powodzeniu lub niepowodzeniu weryfikacji CRC.
+
+###### Przykład
+
+```python
+>>> check_crc("100010101", "101")
+# Wyświetla:
+Reszta po sprawdzeniu: 0
+✅ CRC check passed: brak błędów.
+```
+
+###### Kluczowe linie kodu
+
+```python
+current_shft = dividend.bit_length() - n
+```
+
+- Określa, czy dywidenda ma wystarczającą liczbę bitów do kolejnej operacji XOR.
+
+```python
+rem = (dividend >> current_shft) ^ gen
+```
+
+- Pobiera fragment dywidendy i wykonuje XOR z wielomianem generującym.
+
+```python
+dividend = (dividend & ((1 << current_shft) - 1)) | (rem << current_shft)
+```
+
+- Aktualizuje dywidendę po każdej iteracji, podobnie jak w `CRC_visual`.
+
+```python
+if dividend == 0:
+    print("✅ CRC check passed: brak błędów.")
+else:
+    print("❌ CRC check failed: wykryto błąd.")
+```
+
+- Sprawdza, czy reszta wynosi `0` (brak błędów) i wyświetla odpowiedni komunikat.
+
+---
+
+### 4.2 Kod źródłowy
+Poniżej znajduje się pełny kod źródłowy programu w Pythonie, który wizualizuje proces obliczania CRC-32 oraz weryfikacji sumy kontrolnej.
+
+```python
 def toBin(num):
     return bin(num)[2:] if num != 0 else "0"
 
@@ -240,3 +425,243 @@ if __name__ == "__main__":
     codeword = CRC_visual(data, generator_bin)
     check_crc(codeword, generator_bin)
 ```
+
+---
+
+### 4.3. Omówienie kodu
+
+Kod składa się z czterech głównych funkcji:
+1. **`toBin(num)`**: Konwertuje liczbę dziesiętną na ciąg binarny, usuwając prefiks `0b`. Zwraca `"0"` dla zera.
+2. **`toDec(bin_str)`**: Konwertuje ciąg binarny na liczbę dziesiętną.
+3. **`CRC_visual(data, key)`**: Implementuje algorytm CRC-32 z wizualizacją krok po kroku:
+   - Przyjmuje dane wejściowe i wielomian generujący jako ciągi binarne.
+   - Dopełnia dane zerami (przesunięcie bitowe w lewo o \( n-1 \)).
+   - Wykonuje dzielenie binarne z operacjami XOR.
+   - Wyświetla kolejne kroki dzielenia, podświetlając aktualnie przetwarzane bity.
+   - Zwraca słowo kodowe (dane + CRC).
+4. **`check_crc(codeword, key)`**: Weryfikuje poprawność słowa kodowego przez ponowne dzielenie. Jeśli reszta wynosi 0, dane są poprawne.
+
+Program używa wielomianu generującego CRC-32 w formacie zgodnym z IEEE 802.3 (`0x04C11DB7` w postaci heksadecymalnej, z dołączonym bitem \( x^{32} \)).
+
+### 4.3. Wyniki uruchomienia
+
+Przykładowe dane wejściowe:
+- Dane: `00111010001100101011100110111010010001110100011110010100011010`
+- Wielomian generujący: `100000100110000010001110110110111` (33 bity)
+
+**Wynik działania funkcji `CRC_visual`:**
+
+```python
+---------- CRC wizualizacja z 802.3/802.11 polynomem ----------
+Generator G(x): 100000100110000010001110110110111
+------------------------------------------------------------
+🔍 Wizualizacja obliczania CRC:
+
+Wejściowe dane:    00111010001100101011100110111010010001110100011110010100011010
+Generator (key):   100000100110000010001110110110111
+Dane + zera:       0011101000110010101110011011101001000111010001111001010001101000000000000000000000000000000000
+Rozpoczynam dzielenie binarne...
+
+Divident bits : 0011101000110010101110011011101001000111010001111001010001101000000000000000000000000000000000
+  XORing:       111010001100101011100110111010010
+          XOR   100000100110000010001110110110111
+        =       011010101010101001101000001100101
+Posuwam się dalej w prawo (shift = 59)
+
+Divident bits : 0001101010101010100110100000110010100111010001111001010001101000000000000000000000000000000000
+  XORing:       110101010101010011010000011001010
+          XOR   100000100110000010001110110110111
+        =       010101110011010001011110101111101
+Posuwam się dalej w prawo (shift = 58)
+
+Divident bits : 0000101011100110100010111101011111010111010001111001010001101000000000000000000000000000000000
+  XORing:       101011100110100010111101011111010
+          XOR   100000100110000010001110110110111
+        =       001011000000100000110011101001101
+Posuwam się dalej w prawo (shift = 57)
+
+Divident bits : 0000001011000000100000110011101001101111010001111001010001101000000000000000000000000000000000
+  XORing:       101100000010000011001110100110111
+          XOR   100000100110000010001110110110111
+        =       001100100100000001000000010000000
+Posuwam się dalej w prawo (shift = 55)
+
+Divident bits : 0000000011001001000000010000000100000001010001111001010001101000000000000000000000000000000000
+  XORing:       110010010000000100000001000000010
+          XOR   100000100110000010001110110110111
+        =       010010110110000110001111110110101
+Posuwam się dalej w prawo (shift = 53)
+
+Divident bits : 0000000001001011011000011000111111011010110001111001010001101000000000000000000000000000000000
+  XORing:       100101101100001100011111101101011
+          XOR   100000100110000010001110110110111
+        =       000101001010001110010001011011100
+Posuwam się dalej w prawo (shift = 52)
+
+Divident bits : 0000000000001010010100011100100010110111000001111001010001101000000000000000000000000000000000
+  XORing:       101001010001110010001011011100000
+          XOR   100000100110000010001110110110111
+        =       001001110111110000000101101010111
+Posuwam się dalej w prawo (shift = 49)
+
+Divident bits : 0000000000000010011101111100000001011010101111111001010001101000000000000000000000000000000000
+  XORing:       100111011111000000010110101011111
+          XOR   100000100110000010001110110110111
+        =       000111111001000010011000011101000
+Posuwam się dalej w prawo (shift = 47)
+
+Divident bits : 0000000000000000011111100100001001100001110100011001010001101000000000000000000000000000000000
+  XORing:       111111001000010011000011101000110
+          XOR   100000100110000010001110110110111
+        =       011111101110010001001101011110001
+Posuwam się dalej w prawo (shift = 44)
+
+Divident bits : 0000000000000000001111110111001000100110101111000101010001101000000000000000000000000000000000
+  XORing:       111111011100100010011010111100010
+          XOR   100000100110000010001110110110111
+        =       011111111010100000010100001010101
+Posuwam się dalej w prawo (shift = 43)
+
+Divident bits : 0000000000000000000111111110101000000101000010101011010001101000000000000000000000000000000000
+  XORing:       111111110101000000101000010101011
+          XOR   100000100110000010001110110110111
+        =       011111010011000010100110100011100
+Posuwam się dalej w prawo (shift = 42)
+
+Divident bits : 0000000000000000000011111010011000010100110100011100010001101000000000000000000000000000000000
+  XORing:       111110100110000101001101000111000
+          XOR   100000100110000010001110110110111
+        =       011110000000000111000011110001111
+Posuwam się dalej w prawo (shift = 41)
+
+Divident bits : 0000000000000000000001111000000000011100001111000111110001101000000000000000000000000000000000
+  XORing:       111100000000001110000111100011111
+          XOR   100000100110000010001110110110111
+        =       011100100110001100001001010101000
+Posuwam się dalej w prawo (shift = 40)
+
+Divident bits : 0000000000000000000000111001001100011000010010101010000001101000000000000000000000000000000000
+  XORing:       111001001100011000010010101010000
+          XOR   100000100110000010001110110110111
+        =       011001101010011010011100011100111
+Posuwam się dalej w prawo (shift = 39)
+
+Divident bits : 0000000000000000000000011001101010011010011100011100111001101000000000000000000000000000000000
+  XORing:       110011010100110100111000111001110
+          XOR   100000100110000010001110110110111
+        =       010011110010110110110110001111001
+Posuwam się dalej w prawo (shift = 38)
+
+Divident bits : 0000000000000000000000001001111001011011011011000111100101101000000000000000000000000000000000
+  XORing:       100111100101101101101100011110010
+          XOR   100000100110000010001110110110111
+        =       000111000011101111100010101000101
+Posuwam się dalej w prawo (shift = 37)
+
+Divident bits : 0000000000000000000000000001110000111011111000101010001011101000000000000000000000000000000000
+  XORing:       111000011101111100010101000101110
+          XOR   100000100110000010001110110110111
+        =       011000111011111110011011110011001
+Posuwam się dalej w prawo (shift = 34)
+
+Divident bits : 0000000000000000000000000000110001110111111100110111100110011000000000000000000000000000000000
+  XORing:       110001110111111100110111100110011
+          XOR   100000100110000010001110110110111
+        =       010001010001111110111001010000100
+Posuwam się dalej w prawo (shift = 33)
+
+Divident bits : 0000000000000000000000000000010001010001111110111001010000100000000000000000000000000000000000
+  XORing:       100010100011111101110010100001000
+          XOR   100000100110000010001110110110111
+        =       000010000101111111111100010111111
+Posuwam się dalej w prawo (shift = 32)
+
+Divident bits : 0000000000000000000000000000000001000010111111111110001011111100000000000000000000000000000000
+  XORing:       100001011111111111000101111110000
+          XOR   100000100110000010001110110110111
+        =       000001111001111101001011001000111
+Posuwam się dalej w prawo (shift = 28)
+
+Divident bits : 0000000000000000000000000000000000000011110011111010010110010001110000000000000000000000000000
+  XORing:       111100111110100101100100011100000
+          XOR   100000100110000010001110110110111
+        =       011100011000100111101010101010111
+Posuwam się dalej w prawo (shift = 23)
+
+Divident bits : 0000000000000000000000000000000000000001110001100010011110101010101011100000000000000000000000
+  XORing:       111000110001001111010101010101110
+          XOR   100000100110000010001110110110111
+        =       011000010111001101011011100011001
+Posuwam się dalej w prawo (shift = 22)
+
+Divident bits : 0000000000000000000000000000000000000000110000101110011010110111000110010000000000000000000000
+  XORing:       110000101110011010110111000110010
+          XOR   100000100110000010001110110110111
+        =       010000001000011000111001110000101
+Posuwam się dalej w prawo (shift = 21)
+
+Divident bits : 0000000000000000000000000000000000000000010000001000011000111001110000101000000000000000000000
+  XORing:       100000010000110001110011100001010
+          XOR   100000100110000010001110110110111
+        =       000000110110110011111101010111101
+Posuwam się dalej w prawo (shift = 20)
+
+Divident bits : 0000000000000000000000000000000000000000000000011011011001111110101011110100000000000000000000
+  XORing:       110110110011111101010111101000000
+          XOR   100000100110000010001110110110111
+        =       010110010101111111011001011110111
+Posuwam się dalej w prawo (shift = 14)
+
+Divident bits : 0000000000000000000000000000000000000000000000001011001010111111101100101111011100000000000000
+  XORing:       101100101011111110110010111101110
+          XOR   100000100110000010001110110110111
+        =       001100001101111100111100001011001
+Posuwam się dalej w prawo (shift = 13)
+
+Divident bits : 0000000000000000000000000000000000000000000000000011000011011111001111000010110010000000000000
+  XORing:       110000110111110011110000101100100
+          XOR   100000100110000010001110110110111
+        =       010000010001110001111110011010011
+Posuwam się dalej w prawo (shift = 11)
+
+Divident bits : 0000000000000000000000000000000000000000000000000001000001000111000111111001101001100000000000
+  XORing:       100000100011100011111100110100110
+          XOR   100000100110000010001110110110111
+        =       000000000101100001110010000010001
+Posuwam się dalej w prawo (shift = 10)
+
+Divident bits : 0000000000000000000000000000000000000000000000000000000000001011000011100100000100010000000000
+  XORing:       101100001110010000010001000000000
+          XOR   100000100110000010001110110110111
+        =       001100101000010010011111110110111
+Posuwam się dalej w prawo (shift = 1)
+
+🔚 Koniec dzielenia.
+🔸 Reszta (CRC):     11001010000100100111111101101110
+🔸 Codeword (dane + CRC): 0011101000110010101110011011101001000111010001111001010001101011001010000100100111111101101110
+
+🔍 Sprawdzanie poprawności odebranego kodu...
+
+Reszta po sprawdzeniu: 0
+✅ CRC check passed: brak błędów.
+```
+
+Wyniki potwierdzają poprawność implementacji – reszta z dzielenia słowa kodowego wynosi 0, co oznacza brak błędów.
+
+### 4.4. Testy z błędami
+
+Aby zweryfikować zdolność wykrywania błędów, zmodyfikowano słowo kodowe przez zmianę ostatniego bitu w reszcie. Wynik:
+
+```python
+---------- CRC wizualizacja z 802.3/802.11 polynomem ----------
+Generator G(x): 100000100110000010001110110110111
+------------------------------------------------------------
+🔍 Sprawdzanie poprawności odebranego kodu...
+
+Reszta po sprawdzeniu: 1
+❌ CRC check failed: wykryto błąd.
+```
+
+Testy potwierdzają, że CRC-32 skutecznie wykrywa błędy pojedynczego bitu, zgodnie z teoretycznymi założeniami.
+
+---
