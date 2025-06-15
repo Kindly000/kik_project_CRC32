@@ -204,7 +204,5 @@ if __name__ == "__main__":
     print(f"Generator G(x): {generator_bin}")
     print("-" * 60)
 
-    check = data + "11001010000100100111111101101111"
-
-    # codeword = CRC_visual(data, generator_bin)
-    check_crc(check, generator_bin)
+    codeword = CRC_visual(data, generator_bin)
+    check_crc(codeword, generator_bin)

@@ -665,3 +665,10 @@ Reszta po sprawdzeniu: 1
 Testy potwierdzają, że CRC-32 skutecznie wykrywa błędy pojedynczego bitu, zgodnie z teoretycznymi założeniami.
 
 ---
+
+## 5. Implementacja sprzętowa w MultiSim
+
+
+[[Multisim_video]](https://www.youtube.com/watch?v=yPu_bk8WcsA)
+
+---
