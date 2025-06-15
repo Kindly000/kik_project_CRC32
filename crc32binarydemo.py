@@ -1,12 +1,66 @@
 def toBin(num):
+    """
+    Zamienia liczbę całkowitą na jej binarną reprezentację bez prefiksu '0b'.
+
+    Args:
+        num (int): Liczba całkowita.
+
+    Returns:
+        str: Binarny string (bez '0b' na początku), np. "1010".
+    """
     return bin(num)[2:] if num != 0 else "0"
 
 
 def toDec(bin_str):
+    """
+    Konwertuje ciąg binarny na liczbę całkowitą (dziesiętną).
+
+    Args:
+        bin_str (str): Ciąg bitów (np. "1011").
+
+    Returns:
+        int: Wartość dziesiętna liczby binarnej.
+    """
     return int(bin_str, 2) if bin_str else 0
 
 
 def CRC_visual(data, key):
+    """
+    Wizualizuje proces dzielenia binarnego przy obliczaniu kodu CRC.
+
+    Dane są dzielone przez wielomian generujący w postaci binarnej (modulo 2).
+    Na końcu zwracany jest codeword = dane + CRC.
+
+    Args:
+        data (str): Dane wejściowe jako ciąg binarny (np. "1011001").
+        key (str): Wielomian generujący (np. "1001").
+
+    Returns:
+        str: Codeword (dane + CRC) jako ciąg binarny.
+
+    Kluczowe linie i ich znaczenie:
+
+    - `dividend = code << (n - 1)`:
+        Przesuwa dane w lewo o n-1 bitów, czyli dodaje odpowiednią liczbę zer na końcu,
+        by zostawić miejsce na resztę CRC.
+
+    - `portion = dividend >> current_shft`:
+        Pobiera najstarsze n bitów z aktualnego dividend do operacji XOR.
+
+    - `rem = portion ^ gen`:
+        Wykonuje operację XOR między aktualnym fragmentem danych a wielomianem generującym.
+
+    - `dividend = (dividend & ((1 << current_shft) - 1)) | (rem << current_shft)`:
+        Kluczowa linia symulująca „dzielenie w słupku”:
+            - `(1 << current_shft) - 1` tworzy maskę z samymi jedynkami do pozycji current_shft.
+            - `dividend & mask` usuwa n-bitowy fragment z przodu.
+            - `rem << current_shft` wstawia z powrotem wynik XOR (czyli „resztę”) na to samo miejsce.
+        To odzwierciedla operację dzielenia modulo 2 w CRC.
+
+    - `toBin(dividend).zfill(total_bits)`:
+        Zapewnia, że liczba binarna ma stałą długość, co jest pomocne w wizualizacji procesu.
+    """
+
     print("🔍 Wizualizacja obliczania CRC:\n")
 
     n = len(key)
@@ -80,6 +134,33 @@ def CRC_visual(data, key):
 
 
 def check_crc(codeword, key):
+    """
+    Sprawdza poprawność odebranego ciągu binarnego (codeword) za pomocą wielomianu CRC.
+
+    Args:
+        codeword (str): Odebrane dane + CRC (ciąg binarny).
+        key (str): Wielomian generujący CRC (ciąg binarny).
+
+    Nie zwraca wartości, ale wypisuje:
+        - resztę z dzielenia (jeśli 0 → brak błędów),
+        - komunikat czy CRC check się powiódł.
+
+    Kluczowe linie:
+
+    - `current_shft = dividend.bit_length() - n`:
+        Sprawdza, czy dividend zawiera wystarczającą liczbę bitów do kolejnego dzielenia.
+
+    - `rem = (dividend >> current_shft) ^ gen`:
+        Pobiera fragment danych do dzielenia i wykonuje XOR z wielomianem.
+
+    - `dividend = (dividend & ((1 << current_shft) - 1)) | (rem << current_shft)`:
+        Analogicznie jak w `CRC_visual`, aktualizuje dividend po każdej iteracji XOR.
+
+    - Na końcu:
+        Jeśli dividend == 0 → oznacza, że nie było błędów transmisji (CRC passed).
+        Inaczej → błąd został wykryty.
+    """
+
     print("🔍 Sprawdzanie poprawności odebranego kodu...\n")
 
     n = len(key)
@@ -102,6 +183,14 @@ def check_crc(codeword, key):
 
 
 if __name__ == "__main__":
+    """
+    Funkcja główna programu demonstracyjnego CRC.
+
+    - Inicjalizuje dane binarne wejściowe.
+    - Ustawia 33-bitowy wielomian generujący CRC.
+    - Oblicza codeword (data + CRC).
+    - Sprawdza poprawność przesyłu przy użyciu kodu CRC.
+    """
     data = "111010001100101011100110111010010001110100011110010100011010"
     generator_hex = "0x04C11DB7"
     generator_bin = bin(int(generator_hex, 16))[2:].zfill(32)
