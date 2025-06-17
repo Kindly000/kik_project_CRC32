@@ -39,64 +39,64 @@ CRC-32 opiera się na arytmetyce wielomianów w ciele skończonym GF(2), gdzie:
 - Dodawanie i odejmowanie to operacja XOR.
 - Mnożenie i dzielenie są specyficzne dla arytmetyki binarnej.
 
-Wiadomości są reprezentowane jako wielomiany \( M(x) \), gdzie każdy bit odpowiada współczynnikowi. Na przykład ciąg bitów `1011` odpowiada wielomianowi \( x^3 + x + 1 \).
+Wiadomości są reprezentowane jako wielomiany $ M(x) $, gdzie każdy bit odpowiada współczynnikowi. Na przykład ciąg bitów `1011` odpowiada wielomianowi $ x^3 + x + 1 $.
 
 #### Wielomian generujący
-Standardowy wielomian generujący dla CRC-32 (IEEE 802.3) to:
-\[ G(x) = x^{32} + x^{26} + x^{23} + x^{22} + x^{16} + x^{12} + x^{11} + x^{10} + x^8 + x^7 + x^5 + x^4 + x^2 + x + 1 \]
+Standardowy wielomian generujący dla CRC-32 (IEEE 802.3) to:\
+$ G(x) = x^{32} + x^{26} + x^{23} + x^{22} + x^{16} + x^{12} + x^{11} + x^{10} + x^8 + x^7 + x^5 + x^4 + x^2 + x + 1 $\
 W postaci binarnej: `100000100110000010001110110110111` (33 bity, w tym bit najwyższego stopnia).
 
 #### Proces obliczania CRC
-1. **Dopełnienie danych**: Dane wejściowe są mnożone przez \( x^{32} \), co odpowiada dopełnieniu 32 zerami na końcu.
-\[ M'(x) = M(x) \cdot x^{32}\]
-2. **Dzielenie wielomianowe**: Dopełnione dane są dzielone przez \( G(x) \) w ciele GF(2). Reszta z dzielenia (32 bity) stanowi sumę kontrolną CRC.
-\[ M'(x) = Q(x) \cdot G(x) + R(x) ,\; deg(R(x)) < 32 \]
-3. **Dołączanie sumy kontrolnej**: Reszta \( R(x) \) jest dołączana do oryginalnych danych, tworząc słowo kodowe.
-4. **Weryfikacja**: Odbiorca dzieli otrzymane słowo \( M'(x) \) kodowe przez \( G(x) \). Jeśli reszta wynosi 0, dane są poprawne.
-\[ M'(x)\;mod\;G(x) = 0\]
+1. **Dopełnienie danych**: Dane wejściowe są mnożone przez $ x^{32} $, co odpowiada dopełnieniu 32 zerami na końcu.\
+$ M'(x) = M(x) \cdot x^{32}$
+2. **Dzielenie wielomianowe**: Dopełnione dane są dzielone przez $ G(x) $ w ciele GF(2). Reszta z dzielenia (32 bity) stanowi sumę kontrolną CRC.
+$ M'(x) = Q(x) \cdot G(x) + R(x) ,\; deg(R(x)) < 32 $
+3. **Dołączanie sumy kontrolnej**: Reszta $ R(x) $ jest dołączana do oryginalnych danych, tworząc słowo kodowe.
+4. **Weryfikacja**: Odbiorca dzieli otrzymane słowo $ M'(x) $ kodowe przez $ G(x) $. Jeśli reszta wynosi 0, dane są poprawne.\
+$ M'(x)\;mod\;G(x) = 0$
 
 #### Projektowanie wielomianu generującego
-Wielomian \( G(x) \) musi być starannie wybrany, aby zapewnić wysoką skuteczność wykrywania błędów. Kluczowe cechy:
+Wielomian $ G(x) $ musi być starannie wybrany, aby zapewnić wysoką skuteczność wykrywania błędów. Kluczowe cechy:
 - **Wielomian pierwotny**: ma on największy "cykl" wykrywalności. Wykrywa: wszystkie 1-bitowe błędy, wszystkie 2-bitowe błędy jeśli blok_danych $\le 2^{r} - 1$, gdzie `r` to stopień wielomianu.
 Nie mamy natomiast gwarancji wykrycia wszystkich błędów 3-bitowych, 4-bitowych itd. 
-- **Wielomian typu \( g(x) = p(x) \cdot (x+1) \)** , \(p(x) \to \) pierwiastek pierwotny stopnia `(r-1)`: Wykrywa wszystki błędy 1-bitowe, 2-bitowe oraz wszystkie błędy o nieparzystej liczbie błędów.
-Ma on natomiast krótszy maksymalny blok danych, w którym można wykryć błąd: \( 2^{r-1} - 1\), czyli o połowe mniej niż w przypadku pierwotnego wielomianu generującego.
-- **Wielomiany rozkładalne**: Wielomian jest rozkładalny, jeśli da się go zapisać w następujący sposób:
-\[ g(x) = f(x) \cdot h(x)\]
-W takiej sytuacji pierścień resztkowy nie jest ciałem, tylko ma w sobie tzw. zero-dzielniki. Są to takie elementy \(a(x)\), dla których istnieje element niezerowy \(b(x)\), taki że:
-\[a(x) \cdot b(x) = 0 \; mod \; g(x)\]
+- **Wielomian typu $ g(x) = p(x) \cdot (x+1) $** , $p(x) \to $ pierwiastek pierwotny stopnia `(r-1)`: Wykrywa wszystki błędy 1-bitowe, 2-bitowe oraz wszystkie błędy o nieparzystej liczbie błędów.
+Ma on natomiast krótszy maksymalny blok danych, w którym można wykryć błąd: $ 2^{r-1} - 1$, czyli o połowe mniej niż w przypadku pierwotnego wielomianu generującego.
+- **Wielomiany rozkładalne**: Wielomian jest rozkładalny, jeśli da się go zapisać w następujący sposób:\
+$ g(x) = f(x) \cdot h(x) $\
+W takiej sytuacji pierścień resztkowy nie jest ciałem, tylko ma w sobie tzw. zero-dzielniki. Są to takie elementy $a(x)$, dla których istnieje element niezerowy $b(x)$, taki że:\
+$a(x) \cdot b(x) = 0 \; mod \; g(x)$\
 Jeżeli jakikolwiek błąd przyjmie taką właśnie postać, to nie będziemy w stanie go wykryć za pomocą CRC. 
 #### Możliwości detekcyjne CRC
-Jeśli dane zostaną zmienione ( np. przez zakłócenia transmisji ), to odebrany ciąg będzie różnił się od oryginału. Tę różnicę zapisuje się jako wielomian błędu \(E(x)\). CRC będzie w stanie wykryć błąd tylko wtedy, gdy \(E(x)\) nie dzieli się przez \(G(x)\).
+Jeśli dane zostaną zmienione ( np. przez zakłócenia transmisji ), to odebrany ciąg będzie różnił się od oryginału. Tę różnicę zapisuje się jako wielomian błędu $E(x)$. CRC będzie w stanie wykryć błąd tylko wtedy, gdy $E(x)$ nie dzieli się przez $G(x)$.
 
 Jakie jesteśmy w stanie wykryć z pomocą kodów cyklicznych CRC-x ?
-- **Błędy pojedynczego bitu**: Zawsze, jeśli \( G(x) \) ma co najmniej dwa niezerowe wyrazy.
-Wyjaśnienie:
+- **Błędy pojedynczego bitu**: Zawsze, jeśli $ G(x) $ ma co najmniej dwa niezerowe wyrazy.
+Wyjaśnienie:\
 $E(x) = x^{5} \to$ wielomian $x^{k}$ dzieli się tylko przez $x, x^{2}, x^{3}, \ldots$ (wielomiany tylko z jednym współczynnikiem)
 - **Błędy dwóch bitów**: Jeśli odległość między błędnymi bitami jest mniejsza niż rząd wielomianu pierwotnego.
-Czym jest rząd wielomianu ?
-Jest to najmniejsza liczba `m`, dla której:
-\[ G(x) | (x^{m} + 1)\]
-Wyjaśnienie:
+Czym jest rząd wielomianu ?\
+Jest to najmniejsza liczba `m`, dla której:\
+$ G(x) | (x^{m} + 1)$\
+Wyjaśnienie:\
 $E(x) = x^{k}\cdot(x^{i-k}+1) \to$ widzimy, że $G(x)$ musi dzielić $x^{i-k}+1$ żeby nie było możliwe wykrycie tego błędu.
-- **Błędy o nieparzystej liczbie bitów**: Jeśli \( G(x) \) jest podzielny przez \( (x+1) \).
-Wyjaśnienie:
-Dany wielomian $f(x)$ jest podzielny przez $(x+1)$ jeśli jego wartość w punkcie 1 wynosi 0, czyli:
-\[f(1)=0 \leftrightarrow x+1\;|\;f(x)\]
+- **Błędy o nieparzystej liczbie bitów**: Jeśli $ G(x) $ jest podzielny przez $ (x+1) $.
+Wyjaśnienie:\
+Dany wielomian $f(x)$ jest podzielny przez $(x+1)$ jeśli jego wartość w punkcie 1 wynosi 0, czyli:\
+$f(1)=0 \leftrightarrow x+1\;|\;f(x)$\
 Zgodnie z zasadami arytmetyki w ciele $GF(2)$ sumowanie nieparzystej liczby 1 daje nam wynik $\to$ 1 ( wystąpienie błędu ), natomiast parzysta liczba 1 w $E(x)$ daje pozorny brak błędu ( oczywiście jest to błędne wskazanie ).
-- **Błędy burst**: Ciągłe sekwencje błędnych bitów o długości mniejszej niż stopień \( G(x) \), jeśli najwyższy współczynnik i wyraz wolny są niezerowe.
-Wyjaśnienie:
+- **Błędy burst**: Ciągłe sekwencje błędnych bitów o długości mniejszej niż stopień $ G(x) $, jeśli najwyższy współczynnik i wyraz wolny są niezerowe.
+Wyjaśnienie:\
 Błąd burst jest to taki błąd, który występuje w postaci ciągłej sekwencji błędnych bitów, w której:
   * pierwszy i ostatni bit są błędne
   * pomiędzy nimi może znajdować się dowolna liczba ( również 0 ) błędnych lub poprawnych błędów.
 - **Wszystkie kombinacje błędów mniejszych niż minimalna odległość Hamminga**: 
-Wyjaśnienie:
-Minimalna odległość Hamminga kodu $\to$ czyli najmniejsza liczba bitów, które trzeba zmienić, aby otrzymać inne słowo kodowe.
+Wyjaśnienie:\
+Minimalna odległość Hamminga kodu $\to$ czyli najmniejsza liczba bitów, które trzeba zmienić, aby otrzymać inne słowo kodowe.\
 Błędy o liczności < $d_{min}$ nie są w stanie przekształcić poprawnego słowa kodowego w inne poprawne słowo kodowe. Czyli takie słowo zostanie wykryte jako nieprawidłowe.
 
 Problemy z wykrywaniem:
 - **Błędy na początku sekwencji (zera na początku).**
-- **Błędy o parzystej liczbie bitów, jeśli \( G(x) \) nie zawiera \( (x+1) \)**.
+- **Błędy o parzystej liczbie bitów, jeśli $ G(x) $ nie zawiera $ (x+1) $**.
 
 ---
 
@@ -109,7 +109,7 @@ Algorytm CRC-32 według standardu IEEE 802.3 (zdefiniowany w IEEE 802.3 - 2022 )
 4. Dołączeniu 32-bitowej reszty jako sumy kontrolnej.
 5. Weryfikacji po stronie odbiorcy przez powtórzenie dzielenia.
 
-![802-3-CRC32](https://i.sstatic.net/aVTur.png)
+[802-3-CRC32](https://i.sstatic.net/aVTur.png)
 
 ---
 
@@ -130,7 +130,7 @@ Dokumentacja opisuje implementację algorytmu CRC-32 w Pythonie, zgodnego ze sta
 
 #### Funkcje
 
-##### toBin(num){id="tobin-num"}
+##### toBin(num)
 Konwertuje liczbę całkowitą na ciąg binarny, usuwając prefiks `0b`.
 
 ###### Parametry
@@ -159,7 +159,7 @@ return bin(num)[2:] if num != 0 else "0"
 
 ---
 
-##### toDec(bin_str){id="todec-bin_str"}
+##### toDec(bin_str)
 Konwertuje ciąg binarny na liczbę całkowitą (dziesiętną).
 
 ###### Parametry
@@ -188,7 +188,7 @@ return int(bin_str, 2) if bin_str else 0
 
 ---
 
-##### CRC_visual(data, key){id="crc_visual-data-key"}
+##### CRC_visual(data, key)
 Wizualizuje proces obliczania sumy kontrolnej CRC-32 poprzez dzielenie binarne w ciele GF(2). Dane są dzielone przez wielomian generujący, a wynik (słowo kodowe) zawiera dane wejściowe i dołączoną sumę kontrolną.
 
 ###### Parametry
@@ -215,13 +215,13 @@ Wizualizuje proces obliczania sumy kontrolnej CRC-32 poprzez dzielenie binarne w
 dividend = code << (n - 1)
 ```
 
-- Przesuwa dane w lewo o \( n-1 \) bitów, dopełniając je zerami, aby zarezerwować miejsce na sumę kontrolną.
+- Przesuwa dane w lewo o $ n-1 $ bitów, dopełniając je zerami, aby zarezerwować miejsce na sumę kontrolną.
 
 ```python
 portion = dividend >> current_shft
 ```
 
-- Pobiera \( n \) najbardziej znaczących bitów z dywidendy do operacji XOR.
+- Pobiera $ n $ najbardziej znaczących bitów z dywidendy do operacji XOR.
 
 ```python
 rem = portion ^ gen
@@ -235,7 +235,7 @@ dividend = (dividend & ((1 << current_shft) - 1)) | (rem << current_shft)
 
 - Symuluje dzielenie w słupku:
   - `(1 << current_shft) - 1`: Tworzy maskę bitową z jedynkami do pozycji `current_shft`.
-  - `dividend & mask`: Usuwa \( n \)-bitowy fragment z przodu dywidendy.
+  - `dividend & mask`: Usuwa $ n $-bitowy fragment z przodu dywidendy.
   - `rem << current_shft`: Wstawia wynik XOR na miejsce usuniętego fragmentu.
 
 ```python
@@ -249,7 +249,7 @@ Funkcja wyświetla każdy krok dzielenia binarnego, podświetlając aktualnie pr
 
 ---
 
-##### check_crc(codeword, key){id="check_crc-codeword-key"}
+##### check_crc(codeword, key)
 Sprawdza poprawność słowa kodowego (dane + CRC) przez ponowne dzielenie binarne przez wielomian generujący.
 
 ###### Parametry
@@ -435,13 +435,13 @@ Kod składa się z czterech głównych funkcji:
 2. **`toDec(bin_str)`**: Konwertuje ciąg binarny na liczbę dziesiętną.
 3. **`CRC_visual(data, key)`**: Implementuje algorytm CRC-32 z wizualizacją krok po kroku:
    - Przyjmuje dane wejściowe i wielomian generujący jako ciągi binarne.
-   - Dopełnia dane zerami (przesunięcie bitowe w lewo o \( n-1 \)).
+   - Dopełnia dane zerami (przesunięcie bitowe w lewo o $ n-1 $).
    - Wykonuje dzielenie binarne z operacjami XOR.
    - Wyświetla kolejne kroki dzielenia, podświetlając aktualnie przetwarzane bity.
    - Zwraca słowo kodowe (dane + CRC).
 4. **`check_crc(codeword, key)`**: Weryfikuje poprawność słowa kodowego przez ponowne dzielenie. Jeśli reszta wynosi 0, dane są poprawne.
 
-Program używa wielomianu generującego CRC-32 w formacie zgodnym z IEEE 802.3 (`0x04C11DB7` w postaci heksadecymalnej, z dołączonym bitem \( x^{32} \)).
+Program używa wielomianu generującego CRC-32 w formacie zgodnym z IEEE 802.3 (`0x04C11DB7` w postaci heksadecymalnej, z dołączonym bitem $ x^{32} $).
 
 ### 4.3. Wyniki uruchomienia
 
@@ -672,3 +672,8 @@ Testy potwierdzają, że CRC-32 skutecznie wykrywa błędy pojedynczego bitu, zg
 [[Multisim_video]](https://www.youtube.com/watch?v=yPu_bk8WcsA)
 
 ---
+
+## 6. Literatura
+- [1] [Cyclic_redundancy_check_wikipedia](https://en.wikipedia.org/wiki/Cyclic_redundancy_check)
+- [2] [Mathematics_of_CRC](https://en.wikipedia.org/wiki/Mathematics_of_cyclic_redundancy_checks)
+- [3] [IEEE 802.3 - 2022](https://ieeexplore.ieee.org/document/9844436)
